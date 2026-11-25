@@ -61,37 +61,110 @@ function setCachedUrl(slug, targetUrl) {
   });
 }
 
+
 const NOT_FOUND_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Invalid URL</title>
+  <title>Invalid URL!</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0f172a;
-      color: #f8fafc;
       min-height: 100vh;
+      background: radial-gradient(circle at 50% 35%, #ffffff 0%, #f5f7ff 60%, #edf1ff 100%);
+      color: #161838;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1.25rem;
-      padding: 1.5rem;
+      padding: 2rem 1.25rem;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       text-align: center;
+      overflow: hidden;
     }
-    svg {
-      width: 84px;
-      height: 84px;
-      color: #ef4444;
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 520px;
+      width: 100%;
     }
+
+    .radar {
+      width: 164px;
+      height: 164px;
+      margin-bottom: 1.5rem;
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.75); opacity: 0.65; }
+      100% { transform: scale(1.22); opacity: 0; }
+    }
+
+    @keyframes sweepSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .pulse-ring {
+      transform-origin: 82px 82px;
+      animation: pulseRing 2.6s ease-out infinite;
+    }
+
+    .sweep {
+      transform-origin: 82px 82px;
+      animation: sweepSpin 4.5s linear infinite;
+    }
+
     h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-size: clamp(2.25rem, 6vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      margin-bottom: 0.8rem;
     }
+
+    h1 span {
+      color: #6b3ef5;
+    }
+
+    p {
+      font-size: clamp(1rem, 2.4vw, 1.18rem);
+      line-height: 1.55;
+      color: #565b7d;
+      max-width: 420px;
+      font-weight: 500;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-ring, .sweep { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <svg class="radar" viewBox="0 0 164 164" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="82" cy="82" r="56" stroke="#c7cef9" stroke-width="2" stroke-dasharray="5 5" />
+      <circle cx="82" cy="82" r="36" stroke="#d5dbfb" stroke-width="2" />
+      <circle cx="82" cy="82" r="56" stroke="#7c6cf8" stroke-width="2.5" class="pulse-ring" />
+
+      <g class="sweep">
+        <path d="M82 82 L82 26 A56 56 0 0 1 121.6 42.4 Z" fill="rgba(107, 62, 245, 0.14)" />
+        <line x1="82" y1="82" x2="82" y2="26" stroke="#6b3ef5" stroke-width="2.2" stroke-linecap="round" />
+      </g>
+
+      <circle cx="82" cy="82" r="16" fill="#eef1ff" stroke="#6b3ef5" stroke-width="2.5" />
+      <line x1="76.5" y1="76.5" x2="87.5" y2="87.5" stroke="#ef4444" stroke-width="2.6" stroke-linecap="round" />
+      <line x1="87.5" y1="76.5" x2="76.5" y2="87.5" stroke="#ef4444" stroke-width="2.6" stroke-linecap="round" />
+    </svg>
+
+    <h1>Invalid <span>URL!</span></h1>
+    <p>The link you’re looking for doesn’t exist, is expired, or has been removed.</p>
+  </main>
+</body>
+</html>`;
   </style>
 </head>
 <body>
