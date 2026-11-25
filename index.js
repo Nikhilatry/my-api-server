@@ -1,5 +1,26 @@
 const express = require('express');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+// Load .env from container root if present (zero extra npm dependencies)
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    let val = trimmed.slice(eqIdx + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (key && !process.env[key]) {
+      process.env[key] = val;
+    }
+  }
+}
 
 const app = express();
 app.use(express.json({ limit: '64kb' }));
@@ -81,14 +102,14 @@ function sbHeaders() {
   };
 }
 
-async function sbFetch(path, options = {}) {
+async function sbFetch(pathName, options = {}) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error('Supabase environment variables are not configured');
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5000);
   try {
-    return await fetch(`${SUPABASE_URL}${path}`, {
+    return await fetch(`${SUPABASE_URL}${pathName}`, {
       ...options,
       signal: controller.signal,
       headers: {
@@ -120,6 +141,7 @@ const healthHandler = (req, res) => {
     rssMB: Math.round(mem.rss / 1024 / 1024),
     heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
     cachedSlugs: urlCache.size,
+    envLoaded: Boolean(SUPABASE_URL && SUPABASE_KEY && API_KEY),
     pid: process.pid
   });
 };
