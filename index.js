@@ -22,7 +22,7 @@ app.post('/api/echo', (req, res) => {
   res.status(200).json({ received: req.body });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.SERVER_PORT || process.env.PORT || 25590;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });
