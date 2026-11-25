@@ -12,7 +12,7 @@ if (fs.existsSync(envPath)) {
     const eqIdx = trimmed.indexOf('=');
     if (eqIdx === -1) continue;
     const key = trimmed.slice(0, eqIdx).trim();
-    let val = trimmed.slice(idx + 1).trim();
+    let val = trimmed.slice(eqIdx + 1).trim();
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
     }
@@ -30,7 +30,6 @@ const API_KEY = process.env.API_KEY || '';
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
 const BASE_PUBLIC_URL = process.env.BASE_PUBLIC_URL || 'https://api.pcmb.qzz.io';
-const HOME_PAGE_URL = process.env.HOME_PAGE_URL || 'https://pcmb.qzz.io';
 
 // Bounded in-memory cache (max 500 entries, 60s TTL) to reduce DB SELECT reads
 const URL_CACHE_TTL_MS = 60 * 1000;
@@ -62,118 +61,48 @@ function setCachedUrl(slug, targetUrl) {
   });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function renderNotFoundHtml(slugOrPath) {
-  const safeSlug = escapeHtml(slugOrPath);
-  return `<!DOCTYPE html>
+const NOT_FOUND_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>404 — Short Link Not Found</title>
+  <title>Invalid URL</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0f172a;
       color: #f8fafc;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 1.25rem;
       padding: 1.5rem;
-    }
-    .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 2.25rem 1.75rem;
-      max-width: 440px;
-      width: 100%;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       text-align: center;
-      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.35);
     }
-    .code {
-      display: inline-block;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #fca5a5;
-      background: rgba(239, 68, 68, 0.14);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      padding: 0.3rem 0.75rem;
-      border-radius: 999px;
-      margin-bottom: 1rem;
+    svg {
+      width: 84px;
+      height: 84px;
+      color: #ef4444;
     }
     h1 {
       font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.6rem;
-    }
-    p {
-      color: #94a3b8;
-      font-size: 0.95rem;
-      line-height: 1.55;
-      margin-bottom: 1.25rem;
-    }
-    .slug-box {
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: #38bdf8;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.88rem;
-      padding: 0.55rem 0.8rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      word-break: break-all;
-    }
-    .actions {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    a.btn {
-      text-decoration: none;
-      padding: 0.65rem 1.15rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
       font-weight: 600;
-      transition: opacity 0.15s;
+      letter-spacing: -0.01em;
     }
-    a.btn-primary {
-      background: #38bdf8;
-      color: #0f172a;
-    }
-    a.btn-secondary {
-      background: transparent;
-      color: #f8fafc;
-      border: 1px solid #334155;
-    }
-    a.btn:hover { opacity: 0.88; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <span class="code">ERROR 404</span>
-    <h1>Short Link Not Found</h1>
-    <p>The short URL you tried to open does not exist, may have been typed incorrectly, or has been removed.</p>
-    <div class="slug-box">${escapeHtml(BASE_PUBLIC_URL)}/${safeSlug}</div>
-    <div class="actions">
-      <a class="btn btn-primary" href="${escapeHtml(HOME_PAGE_URL)}">Go to Homepage</a>
-      <a class="btn btn-secondary" href="javascript:history.back()">Go Back</a>
-    </div>
-  </div>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    <line x1="2" y1="2" x2="22" y2="22" />
+  </svg>
+  <h1>Invalid URL</h1>
 </body>
 </html>`;
-}
 
 // CORS headers for browser/frontend requests
 app.use((req, res, next) => {
@@ -345,11 +274,11 @@ app.get('/api/stats/:slug', async (req, res) => {
   }
 });
 
-// Redirect endpoint + click increment (renders HTML 404 page if slug not found)
+// Redirect endpoint + click increment
 app.get('/:slug', async (req, res) => {
   const slug = req.params.slug;
   if (!/^[a-zA-Z0-9_-]{3,24}$/.test(slug)) {
-    return res.status(404).type('html').send(renderNotFoundHtml(slug));
+    return res.status(404).type('html').send(NOT_FOUND_HTML);
   }
 
   try {
@@ -363,7 +292,7 @@ app.get('/:slug', async (req, res) => {
       }
       const rows = await response.json();
       if (!rows.length || !isValidHttpUrl(rows[0].target_url)) {
-        return res.status(404).type('html').send(renderNotFoundHtml(slug));
+        return res.status(404).type('html').send(NOT_FOUND_HTML);
       }
       targetUrl = rows[0].target_url;
       setCachedUrl(slug, targetUrl);
@@ -381,7 +310,7 @@ app.get('/:slug', async (req, res) => {
   }
 });
 
-// 404 fallback (JSON for /api/*, HTML page for browser paths)
+// 404 fallback
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({
@@ -389,8 +318,7 @@ app.use((req, res) => {
       path: req.originalUrl
     });
   }
-  const cleanPath = req.path.replace(/^\/+/, '');
-  return res.status(404).type('html').send(renderNotFoundHtml(cleanPath));
+  return res.status(404).type('html').send(NOT_FOUND_HTML);
 });
 
 // Global Express error handler
